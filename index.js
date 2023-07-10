@@ -2,7 +2,7 @@ const express = require('express')
 const uuid = require('uuid')
 
 const app = express()
-const port = 3000
+const port = 3002
 app.use(express.json())
 
 const orders = []
@@ -73,6 +73,6 @@ app.patch('/orders/:id :status',  (request, response) => {
     return response.json(specificUser)
 })
 
-app.listen(3000, () => {
+app.listen(3002, () => {
     console.log(`🚀Server started on port ${port}`)
 })
