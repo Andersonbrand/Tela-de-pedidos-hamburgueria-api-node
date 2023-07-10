@@ -7,6 +7,13 @@ app.use(express.json())
 
 const orders = []
 
+function ordersById(id) {
+    return orders.filter(orders => orders.id == id)
+}
+
+function ordersByStatus(id,) {
+    
+}
 
 app.get('/orders', (request, response) => {
     return response.json(orders)
@@ -54,23 +61,11 @@ app.delete('/orders/:id', (request, response) => {
 })
 
 app.get('/orders/:id', (request, response) => {
-    const { id } = request.params
-    const { order, clientName, price, status } = request.body
-    
-    const specificUser = { id, order, clientName, price, status }
-
-    return response.json(specificUser)
+    return response.json(ordersById(request.params.id))
 })
 
-app.patch('/orders/:id :status',  (request, response) => {
-    const { id } = request.params
-    const { order, clientName, price, status } = request.body
-    
-    const specificUser = { id, order, clientName, price, newStatus }
-
-    const newStatus = {status: "Pedido finalizado"}
-
-    return response.json(specificUser)
+app.patch('/orders/:id', (request, response) => {
+   
 })
 
 app.listen(3002, () => {
