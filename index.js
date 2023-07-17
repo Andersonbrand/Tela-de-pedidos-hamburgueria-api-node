@@ -11,8 +11,25 @@ function ordersById(id) {
     return orders.filter(orders => orders.id == id)
 }
 
-function ordersByStatus(id,) {
-    
+const checkId = (request, response, next) => {
+    const { id } = request.params
+    const index = orders.findIndex(element => element.id === id)
+    if (index < 0) {
+        return response.status(404).json({ error: "Not Found" })
+    }
+    request.ordersIndex = index
+    request.ordersId = id
+    next()
+}
+
+const checkRequest = (request, response, next) => {
+    const method = request.method
+
+    const url = request.url
+
+    console.log(`[${method}] - ${url} `)
+
+    next()
 }
 
 app.get('/orders', (request, response) => {
@@ -64,10 +81,14 @@ app.get('/orders/:id', (request, response) => {
     return response.json(ordersById(request.params.id))
 })
 
-app.patch('/orders/:id', (request, response) => {
-   
+app.patch("/order/:id", checkId, checkRequest, (request, response) => {
+    const index = request.ordersIndex
+
+    orders[index].ordersStatus = "Pronto"
+    
+    return response.json(orders[index])
 })
 
-app.listen(3002, () => {
+app.listen(port, () => {
     console.log(`🚀Server started on port ${port}`)
 })
