@@ -1,3 +1,4 @@
+const { res, req, json } = require('express')
 const express = require('express')
 const uuid = require('uuid')
 const cors = require('cors')
@@ -9,86 +10,78 @@ app.use(cors())
 
 const orders = []
 
-function ordersById(id) {
-    return orders.filter(orders => orders.id == id)
-}
+const checkUserId = (req, res, next) => {
+    const { id } = req.params
+    const index = orders.findIndex(clientId => clientId.id === id)
 
-const checkId = (request, response, next) => {
-    const { id } = request.params
-    const index = orders.findIndex(element => element.id === id)
     if (index < 0) {
-        return response.status(404).json({ error: "Not Found" })
+        return res.status(404).json({ error: "Order Not Found" })
     }
-    request.ordersIndex = index
-    request.ordersId = id
-    next()
-}
 
-const checkRequest = (request, response, next) => {
-    const method = request.method
-
-    const url = request.url
-
-    console.log(`[${method}] - ${url} `)
+    req.userIndex = index
+    req.userId = id
 
     next()
 }
 
-app.get('/orders', (request, response) => {
-    return response.json(orders)
+const requests = (req, res, next) => {
+    const method = req.route.methods
+    const url = req.route.path
+    console.log(method, url)
+
+    next()
+}
+
+app.get('/orders', requests, (req, res) => {
+    return res.json(orders)
 })
 
-app.post('/orders', (request, response) => {
-    const { order, clientName, price, status } = request.body
+app.post('/orders', requests, (req, res) => {
+    const { order, clientName, price } = req.body
+    const status = "Em preparação"
 
-    const user = { id: uuid.v4(), order, clientName, price, status }
+    const clientId = { id: uuid.v4(), order, clientName, price, status }
 
-    orders.push(user)
-
-    return response.status(201).json(user)
+    orders.push(clientId)
+    return res.status(201).json(clientId)
 })
 
-app.put('/orders/:id', (request, response) => {
-    const { id } = request.params
-    const { order, clientName, price, status } = request.body
+app.put('/orders/:id', checkUserId, requests, (req, res) => {
+    const { order, clientName, price } = req.body
+    const status = "Em preparação"
+    const id = req.userId
+    const index = req.userIndex
 
-    const updateUsers = { id, order, clientName, price, status }
+    const updatedUser = { id, order, clientName, price, status }
 
-    const index = orders.findIndex(user => user.id === id)
+    orders[index] = updatedUser
+    return res.json(updatedUser)
 
-    if (index < 0) {
-        return response.status(404).json({ message: "User not found" })
-    }
-
-    orders[index] = updateUsers
-
-    return response.json(updateUsers)
 })
 
-app.delete('/orders/:id', (request, response) => {
-    const { id } = request.params
-
-    const index = orders.findIndex(user => user.id === id)
-
-    if (index < 0) {
-        return response.status(404).json({ message: "User not found" })
-    }
+app.delete('/orders/:id', checkUserId, requests, (req, res) => {
+    const index = req.userIndex
 
     orders.splice(index, 1)
-
-    return response.status(204).json()
+    return res.status(204).json(orders)
 })
 
-app.get('/orders/:id', (request, response) => {
-    return response.json(ordersById(request.params.id))
+app.get('/orders/:id', checkUserId, requests, (req, res) => {
+    const index = req.userIndex
+    const order = orders[index]
+
+    return res.json(order)
 })
 
-app.patch("/order/:id", checkId, checkRequest, (request, response) => {
-    const index = request.ordersIndex
+app.patch('/orders/:id', checkUserId, requests, (req, res) => {
+    const index = req.userIndex
+    const { id, clientName, order, price } = orders[index]
+    let status = orders[index].status
+    status = "Pedido Pronto"
+    const finishedOrder = { id, order, clientName, price, status }
+    orders[index] = finishedOrder
 
-    orders[index].ordersStatus = "Pronto"
-    
-    return response.json(orders[index])
+    return res.json(finishedOrder)
 })
 
 app.listen(port, () => {
